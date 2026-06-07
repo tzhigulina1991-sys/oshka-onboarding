@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приключения Ошки — Онлайн Школа №1</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+            background:linear-gradient(160deg,#1a0840 0%,#2d1b69 50%,#1a0840 100%);
+            min-height:100vh; color:#fff; overflow-x:hidden;
+        }
+        .stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+        .star  { position:absolute; background:#fff; border-radius:50%;
+                 animation:twinkle var(--d,3s) infinite alternate; }
+        @keyframes twinkle {
+            0%  { opacity:.12; transform:scale(1); }
+            100%{ opacity:.8;  transform:scale(1.4); }
+        }
+
+        /* ── ONBOARDING (первый визит) ── */
+        #onboard-screen {
+            position:fixed; inset:0; z-index:100;
+            display:flex; align-items:center; justify-content:center;
+            padding:24px;
+            background:linear-gradient(160deg,#1a0840 0%,#2d1b69 50%,#1a0840 100%);
+        }
+        .onboard-box {
+            background:rgba(60,30,120,.95);
+            border:1px solid rgba(255,255,255,.15); border-radius:28px;
+            padding:36px 30px; width:100%; max-width:380px; text-align:center;
+        }
+        .onboard-oshka { width:88px; height:90px; overflow:hidden; position:relative; margin:0 auto 16px; }
+        .onboard-oshka img { position:absolute; width:220px; top:-5px; left:-4px; }
+        .onboard-box h1 { font-size:24px; font-weight:800; margin-bottom:6px; }
+        .onboard-box p  { font-size:14px; opacity:.65; margin-bottom:28px; line-height:1.5; }
+        .field { margin-bottom:14px; text-align:left; }
+        .field label { display:block; font-size:11px; font-weight:700; opacity:.6;
+                       margin-bottom:7px; text-transform:uppercase; letter-spacing:.5px; }
+        .field input {
+            width:100%; padding:13px 15px;
+            background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.15);
+            border-radius:13px; color:#fff; font-size:15px; outline:none;
+            transition:border-color .2s;
+        }
+        .field input::placeholder { color:rgba(255,255,255,.3); }
+        .field input:focus { border-color:#84cc16; }
+        .btn-start {
+            width:100%; padding:16px; border:none; border-radius:13px;
+            font-size:16px; font-weight:800; cursor:pointer; margin-top:8px;
+            background:linear-gradient(135deg,#84cc16,#65a30d); color:#fff;
+            transition:opacity .2s, transform .1s;
+        }
+        .btn-start:hover  { opacity:.9; transform:translateY(-1px); }
+        .btn-start:active { transform:translateY(0); }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            position:sticky; top:0; z-index:50;
+            background:rgba(26,8,64,.98);
+            border-bottom:1px solid rgba(255,255,255,.08);
+            padding:13px 18px; display:flex; align-items:center; gap:12px;
+        }
+        .avatar {
+            width:40px; height:40px; border-radius:50%; flex-shrink:0;
+            background:linear-gradient(135deg,#7c3aed,#9333ea);
+            display:flex; align-items:center; justify-content:center;
+            font-weight:800; font-size:16px;
+        }
+        .topbar-info { flex:1; min-width:0; }
+        .topbar-name { font-weight:700; font-size:14px; }
+        .topbar-prog { font-size:11px; opacity:.5; margin-top:2px; }
+        .pbar { height:4px; background:rgba(255,255,255,.12); border-radius:99px; margin-top:5px; overflow:hidden; }
+        .pbar-fill { height:100%; background:linear-gradient(90deg,#84cc16,#a3e635);
+                     border-radius:99px; transition:width .6s ease; }
+        .streak { background:rgba(132,204,22,.15); border:1px solid rgba(132,204,22,.35);
+                  border-radius:99px; padding:5px 11px; font-size:13px;
+                  color:#a3e635; font-weight:700; flex-shrink:0; }
+
+        /* ── FINISH BANNER ── */
+        .finish-banner {
+            display:none; position:relative; z-index:1;
+            margin:0 auto; max-width:460px; padding:20px 14px 0;
+        }
+        .finish-banner.show { display:block; }
+        .finish-card {
+            background:linear-gradient(135deg,#422006,#92400e,#b45309);
+            border:1.5px solid rgba(252,211,77,.5); border-radius:22px;
+            padding:22px 20px; text-align:center;
+            box-shadow:0 8px 32px rgba(245,158,11,.3);
+            animation:finishGlow 2.5s ease-in-out infinite;
+        }
+        @keyframes finishGlow {
+            0%,100% { box-shadow:0 8px 32px rgba(245,158,11,.3); }
+            50%      { box-shadow:0 8px 48px rgba(245,158,11,.6); }
+        }
+        .finish-card-emoji { font-size:36px; display:block; margin-bottom:6px; }
+        .finish-card-title { font-size:18px; font-weight:900; color:#fcd34d; margin-bottom:6px; }
+        .finish-card-sub   { font-size:13px; opacity:.8; margin-bottom:14px; line-height:1.5; }
+        .finish-card-btn {
+            display:inline-block; padding:13px 28px; border:none; border-radius:12px;
+            font-size:14px; font-weight:800; cursor:pointer;
+            background:linear-gradient(135deg,#fcd34d,#f59e0b); color:#1a0840;
+            transition:transform .15s;
+        }
+        .finish-card-btn:hover { transform:scale(1.05); }
+
+        /* ── ROAD ── */
+        #road-screen { min-height:100vh; position:relative; z-index:1; }
+        .road-wrap { max-width:460px; margin:0 auto; padding:24px 14px 100px; position:relative; }
+        #road-svg { position:absolute; top:0; left:0; width:100%; height:100%;
+                    pointer-events:none; overflow:visible; }
+        .road-path      { fill:none; stroke:rgba(255,255,255,.1); stroke-width:7;
+                          stroke-linecap:round; stroke-dasharray:1 16; }
+        .road-path-done { fill:none; stroke:#84cc16; stroke-width:7;
+                          stroke-linecap:round; stroke-dasharray:1 16; }
+
+        .chapter { text-align:center; margin:4px 0 22px; }
+        .chapter span {
+            display:inline-block; background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.12); border-radius:99px;
+            padding:6px 18px; font-size:11px; font-weight:700;
+            letter-spacing:.5px; text-transform:uppercase; opacity:.75;
+        }
+
+        /* ── CHECKPOINT (медаль за главу) ── */
+        .checkpoint-row { display:flex; justify-content:center; margin:8px 0 6px; }
+        .checkpoint-node { display:flex; flex-direction:column; align-items:center; }
+        .checkpoint-circle {
+            width:86px; height:86px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center; font-size:36px;
+            background:linear-gradient(135deg,#f59e0b,#d97706);
+            box-shadow:0 4px 24px rgba(245,158,11,.55);
+            animation:cpGlow 2.5s infinite;
+        }
+        .checkpoint-circle.dim {
+            background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.12);
+            box-shadow:none; animation:none; font-size:28px; opacity:.35;
+        }
+        @keyframes cpGlow {
+            0%  { box-shadow:0 0 0 0   rgba(245,158,11,.7); }
+            60% { box-shadow:0 0 0 20px rgba(245,158,11,.0); }
+            100%{ box-shadow:0 0 0 0   rgba(245,158,11,.0); }
+        }
+        .checkpoint-label { margin-top:9px; font-size:11px; font-weight:700; text-align:center; }
+        .checkpoint-label.dim { opacity:.28; }
+
+        /* ── CHAPTER GATE (портал в новую главу) ── */
+        .chapter-gate {
+            margin:14px 0 24px; border-radius:22px; padding:22px 18px 24px;
+            background:linear-gradient(135deg,#0c4a6e 0%,#0369a1 50%,#0e7490 100%);
+            border:1px solid rgba(56,189,248,.35); text-align:center; position:relative; overflow:hidden;
+        }
+        .chapter-gate::before {
+            content:''; position:absolute; inset:0;
+            background:radial-gradient(circle at 75% 40%,rgba(255,255,255,.1) 0%,transparent 60%);
+            pointer-events:none;
+        }
+        .gate-oshka { width:64px; height:67px; overflow:hidden; position:relative; display:inline-block; margin-bottom:10px; }
+        .gate-oshka img { position:absolute; width:165px; top:-5px; left:-3px; }
+        .gate-title { font-size:20px; font-weight:800; margin-bottom:5px; }
+        .gate-sub   { font-size:12px; opacity:.7; line-height:1.55; max-width:240px; margin:0 auto; }
+
+        .companion { display:flex; align-items:flex-end; gap:10px;
+                     margin:-8px 0 14px; padding:0 4px; }
+        .companion.flip { flex-direction:row-reverse; }
+        .oshka-crop { width:72px; height:76px; overflow:hidden; position:relative; flex-shrink:0; }
+        .oshka-crop img { position:absolute; width:186px; top:-5px; left:-3px; }
+        .bubble {
+            background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16);
+            border-radius:16px 16px 16px 4px; padding:10px 14px;
+            font-size:12px; line-height:1.55; max-width:210px;
+        }
+        .companion.flip .bubble { border-radius:16px 16px 4px 16px; }
+
+        .task-row { display:flex; margin-bottom:48px; }
+        .task-row.pos-left  { justify-content:flex-start; padding-left:20px; }
+        .task-row.pos-right { justify-content:flex-end;   padding-right:20px; }
+
+        .task-node { display:flex; flex-direction:column; align-items:center;
+                     cursor:pointer; position:relative; }
+        .task-node.locked { cursor:default; }
+        .node-circle {
+            width:74px; height:74px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:30px; transition:transform .15s;
+        }
+        .task-node:not(.locked) .node-circle:hover { transform:scale(1.08); }
+        .task-node.completed .node-circle {
+            background:linear-gradient(135deg,#84cc16,#65a30d);
+            box-shadow:0 4px 20px rgba(132,204,22,.4);
+        }
+        .task-node.active .node-circle {
+            background:linear-gradient(135deg,#7c3aed,#a855f7);
+            animation:glow 2.2s infinite;
+        }
+        @keyframes glow {
+            0%  { box-shadow:0 0 0 0   rgba(147,51,234,.7); }
+            60% { box-shadow:0 0 0 18px rgba(147,51,234,.0); }
+            100%{ box-shadow:0 0 0 0   rgba(147,51,234,.0); }
+        }
+        .task-node.locked .node-circle {
+            background:rgba(255,255,255,.05);
+            border:2px solid rgba(255,255,255,.1);
+        }
+        .node-label { margin-top:9px; text-align:center; max-width:105px;
+                      font-size:11px; font-weight:700; line-height:1.35; }
+        .task-node.locked .node-label { opacity:.28; }
+        .node-day  { font-size:10px; opacity:.4; margin-top:2px; }
+        .task-node.locked .node-day { opacity:.18; }
+
+        /* ── MEDALS BUTTON ── */
+        .medals-btn {
+            position:fixed; right:16px; bottom:86px; z-index:60;
+            width:54px; height:54px; border-radius:50%; border:none;
+            background:linear-gradient(135deg,#f59e0b,#d97706);
+            box-shadow:0 4px 18px rgba(245,158,11,.55);
+            font-size:24px; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            transition:transform .15s;
+        }
+        .medals-btn:hover { transform:scale(1.08); }
+        .medals-btn-badge {
+            position:absolute; top:-4px; right:-4px;
+            background:#a855f7; color:#fff;
+            border-radius:99px; font-size:10px; font-weight:800;
+            min-width:18px; height:18px; padding:0 5px;
+            display:flex; align-items:center; justify-content:center;
+            border:2px solid #1a0840;
+        }
+
+        /* ── MEDALS DRAWER ── */
+        .medals-overlay {
+            position:fixed; inset:0; z-index:299;
+            background:rgba(0,0,0,.5); backdrop-filter:blur(4px);
+            display:none;
+        }
+        .medals-overlay.open { display:block; }
+        .medals-drawer {
+            position:fixed; top:0; right:-320px; width:300px; height:100dvh;
+            z-index:300; background:#1c0f52;
+            border-left:1px solid rgba(255,255,255,.1);
+            transition:right .32s cubic-bezier(.22,.61,.36,1);
+            display:flex; flex-direction:column; overflow:hidden;
+        }
+        .medals-drawer.open { right:0; }
+        .medals-hdr {
+            padding:20px 18px 14px; flex-shrink:0;
+            border-bottom:1px solid rgba(255,255,255,.08);
+            display:flex; align-items:flex-start; justify-content:space-between;
+        }
+        .medals-hdr-left h2 { font-size:17px; font-weight:800; }
+        .medals-hdr-count   { font-size:11px; opacity:.45; margin-top:3px; }
+        .medals-close {
+            background:none; border:none; color:#fff;
+            font-size:22px; cursor:pointer; opacity:.5; line-height:1;
+            padding:0; flex-shrink:0;
+        }
+        .medals-close:hover { opacity:1; }
+        .medals-list {
+            flex:1; overflow-y:auto; padding:14px 14px 36px;
+            display:flex; flex-direction:column; gap:9px;
+        }
+        .medals-list::-webkit-scrollbar { width:3px; }
+        .medals-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,.15); border-radius:99px; }
+
+        .medal-card {
+            display:flex; align-items:center; gap:12px;
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
+            border-radius:14px; padding:12px 13px;
+        }
+        .medal-card.earned           { background:rgba(132,204,22,.07); border-color:rgba(132,204,22,.25); }
+        .medal-card.earned.is-gold   { background:rgba(245,158,11,.09); border-color:rgba(245,158,11,.32); }
+        .medal-card.earned.is-orange { background:rgba(234,88,12,.09);  border-color:rgba(251,146,60,.35); }
+        .medal-card.earned.is-pro    { background:rgba(168,85,247,.09); border-color:rgba(168,85,247,.32); }
+        .medal-icon {
+            width:46px; height:46px; border-radius:12px; flex-shrink:0;
+            background:rgba(255,255,255,.05);
+            display:flex; align-items:center; justify-content:center;
+            font-size:22px; filter:grayscale(1); opacity:.3;
+        }
+        .medal-card.earned .medal-icon { filter:none; opacity:1; background:rgba(255,255,255,.08); }
+        .medal-info  { flex:1; min-width:0; }
+        .medal-name  { font-size:13px; font-weight:700; opacity:.35; }
+        .medal-card.earned .medal-name { opacity:1; }
+        .medal-desc  { font-size:11px; opacity:.4; margin-top:2px; line-height:1.4; }
+        .medal-card.earned .medal-desc { opacity:.6; }
+        .medal-tick  { font-size:15px; flex-shrink:0; opacity:0; }
+        .medal-card.earned .medal-tick { opacity:1; }
+
+        /* ── MODAL ── */
+        #modal { display:none; position:fixed; inset:0; z-index:200;
+                 align-items:flex-end; justify-content:center; }
+        #modal.open { display:flex; }
+        .modal-bg { position:absolute; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); }
+        .modal-sheet {
+            position:relative; z-index:1; background:#1c0f52;
+            border:1px solid rgba(255,255,255,.1); border-radius:26px 26px 0 0;
+            padding:0 22px 42px; width:100%; max-width:460px;
+            animation:slideUp .3s cubic-bezier(.22,.61,.36,1);
+        }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-handle { width:42px; height:5px; background:rgba(255,255,255,.18);
+                        border-radius:99px; margin:13px auto 22px; }
+        .modal-head  { display:flex; gap:14px; align-items:flex-start; margin-bottom:16px; }
+        .modal-icon  { width:56px; height:56px; border-radius:17px; flex-shrink:0;
+                       background:linear-gradient(135deg,#7c3aed,#a855f7);
+                       display:flex; align-items:center; justify-content:center; font-size:27px; }
+        .modal-icon.green { background:linear-gradient(135deg,#84cc16,#65a30d); }
+        .modal-title { font-size:20px; font-weight:800; line-height:1.2; }
+        .modal-day   { font-size:12px; color:#a3e635; margin-top:4px; font-weight:600; }
+        .modal-desc  { font-size:14px; line-height:1.65; opacity:.75; margin-bottom:18px; }
+        .badges { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:22px; }
+        .badge  { background:rgba(255,255,255,.09); border-radius:99px;
+                  padding:5px 12px; font-size:12px; font-weight:600; }
+        .btn-go {
+            width:100%; padding:17px; border:none; border-radius:14px;
+            font-size:15px; font-weight:700; cursor:pointer;
+            background:linear-gradient(135deg,#7c3aed,#9333ea); color:#fff;
+        }
+        .btn-go:hover { opacity:.88; }
+
+        @keyframes fall { to { transform:translateY(110vh) rotate(540deg); opacity:0; } }
+    </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<!-- ПЕРВЫЙ ВИЗИТ — имя родителя и ребёнка -->
+<div id="onboard-screen" style="display:none">
+    <div class="onboard-box">
+        <div class="onboard-oshka"><img src="ошка.png" alt="Ошка"></div>
+        <h1>Привет! Я Ошка 👋</h1>
+        <p>Скажите как вас зовут — и мы начнём наше путешествие!</p>
+        <div class="field">
+            <label>Ваше имя</label>
+            <input type="text" id="inp-name" placeholder="Например: Елена">
+        </div>
+        <div class="field">
+            <label>Имя вашего ребёнка</label>
+            <input type="text" id="inp-child" placeholder="Например: Петя">
+        </div>
+        <button class="btn-start" onclick="saveProfile()">Начать путешествие →</button>
+    </div>
+</div>
+
+<!-- ФИНИШНЫЙ БАННЕР -->
+<div class="finish-banner" id="finish-banner">
+    <div class="finish-card">
+        <span class="finish-card-emoji">🏆</span>
+        <div class="finish-card-title">Все приключения пройдены!</div>
+        <div class="finish-card-sub">Вы прошли весь путь вместе с Ошкой — это настоящее достижение!</div>
+        <button class="finish-card-btn" onclick="window.location.href='finish.html'">🎉 Получить поздравление!</button>
+    </div>
+</div>
+
+<!-- ДОРОГА -->
+<div id="road-screen">
+    <div class="topbar">
+        <div class="avatar" id="hdr-avatar">?</div>
+        <div class="topbar-info">
+            <div class="topbar-name" id="hdr-name">...</div>
+            <div class="topbar-prog" id="hdr-prog">0 из 8 приключений</div>
+            <div class="pbar"><div class="pbar-fill" id="hdr-pbar" style="width:0%"></div></div>
+        </div>
+        <div class="streak" id="hdr-streak">🔥 0</div>
+    </div>
+    <div class="road-wrap" id="road-wrap">
+        <svg id="road-svg"></svg>
+        <div id="tasks-list"></div>
+    </div>
+</div>
+
+<!-- КНОПКА МЕДАЛЕЙ -->
+<button class="medals-btn" onclick="openMedals()" title="Мои медали">
+    🏅<span class="medals-btn-badge" id="medals-badge">0</span>
+</button>
+
+<!-- ДОСКА МЕДАЛЕЙ -->
+<div class="medals-overlay" id="medals-overlay" onclick="closeMedals()"></div>
+<div class="medals-drawer" id="medals-drawer">
+    <div class="medals-hdr">
+        <div class="medals-hdr-left">
+            <h2>Доска медалей</h2>
+            <div class="medals-hdr-count" id="medals-hdr-count">0 из 11 получено</div>
+            <!-- счётчик обновляется динамически через renderMedals() -->
+        </div>
+        <button class="medals-close" onclick="closeMedals()">✕</button>
+    </div>
+    <div class="medals-list" id="medals-list"></div>
+</div>
+
+<!-- МОДАЛ -->
+<div id="modal">
+    <div class="modal-bg" onclick="closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-head">
+            <div class="modal-icon" id="m-icon">🎯</div>
+            <div>
+                <div class="modal-title" id="m-title"></div>
+                <div class="modal-day"   id="m-day"></div>
+            </div>
+        </div>
+        <p class="modal-desc" id="m-desc"></p>
+        <div class="badges" id="m-badges"></div>
+        <button class="btn-go" id="m-go">Начать приключение →</button>
+    </div>
+</div>
+
+<script>
+const TASKS = [
+    { id:1, day:1,  icon:'👋', title:'Добро пожаловать!',
+      desc:'Познакомься с Ошкой, узнай о школе и встреть свою команду.',
+      tags:['📖 Статья','⏱ 5 мин'], url:'task-1.html', chapter:1, chTitle:'Знакомство со школой' },
+    { id:2, day:2,  icon:'🖥', title:'Входим на платформу',
+      desc:'Получите доступ в личный кабинет школы — пошаговая инструкция за 5 минут.',
+      tags:['📋 Инструкция','⏱ 5 мин'], url:'task-2.html', chapter:1, chTitle:'Знакомство со школой' },
+    { id:3, day:3,  icon:'🎥', title:'Покоряем Zoom',
+      desc:'Установите Zoom и подключитесь к первому уроку — всё по шагам.',
+      tags:['📋 Инструкция','⏱ 7 мин'], url:'task-3.html', chapter:1, chTitle:'Знакомство со школой' },
+    { id:4, day:5,  icon:'🧑‍🏫', title:'Познакомься с куратором',
+      desc:'Куратор — главный помощник твоего ребёнка. Напиши первое сообщение.',
+      tags:['💬 Задание','⏱ 5 мин'], url:'task-4.html', chapter:1, chTitle:'Знакомство со школой' },
+    { id:5, day:7,  icon:'🎉', title:'Первые уроки!',
+      desc:'Поздравляем! Разбираемся, какие бывают домашние задания и где их отслеживать.',
+      tags:['📖 Статья','⏱ 5 мин'], url:'task-5.html', chapter:2, chTitle:'Учёба и прогресс' },
+    { id:6, day:10, icon:'🧪', title:'Тесты и оценки',
+      desc:'Проходим первый тест, смотрим оценку в дневнике. У вас 3 попытки — засчитывается лучшая!',
+      tags:['🎯 Практика','⏱ 7 мин'], url:'task-6.html', chapter:2, chTitle:'Учёба и прогресс' },
+    { id:7, day:14, icon:'✏️', title:'Самопроверка',
+      desc:'Задания для самопроверки помогают закрепить тему — отправлять куратору не нужно.',
+      tags:['📝 Задание','⏱ 5 мин'], url:'task-7.html', chapter:2, chTitle:'Учёба и прогресс' },
+    { id:8, day:20, icon:'📤', title:'Письменные домашки',
+      desc:'Загружаем первую письменную работу: формат PDF, только через ЛК Ученика, срок проверки 4 дня.',
+      tags:['📋 Инструкция','⏱ 10 мин'], url:'task-8.html', chapter:2, chTitle:'Учёба и прогресс' },
+    { id:9,  day:22, icon:'📂', title:'Загружаем документы',
+      desc:'Пошаговая инструкция по зачислению в аттестующую школу: шаблоны, сканы и проверка куратором.',
+      tags:['📋 Инструкция','⏱ 10 мин'], url:'task-9.html', chapter:3, chTitle:'Зачисление в школу' },
+    { id:13, day:35, icon:'📋', title:'Порядок аттестации',
+      desc:'Разбираемся как проходит аттестация и где найти аттестационные работы в ЛК.',
+      tags:['📖 Статья','⏱ 5 мин'], url:'task-13.html', chapter:4, chTitle:'Аттестация' },
+    { id:14, day:38, icon:'⚠️', title:'Правила аттестации',
+      desc:'Одна попытка, требования к фото, время на прохождение — важно знать заранее.',
+      tags:['📋 Инструкция','⏱ 7 мин'], url:'task-14.html', chapter:4, chTitle:'Аттестация' },
+    { id:15, day:42, icon:'📝', title:'Доклады и рефераты',
+      desc:'Где найти темы и шаблоны — и почему не стоит откладывать на последний день.',
+      tags:['📝 Задание','⏱ 5 мин'], url:'task-15.html', chapter:4, chTitle:'Аттестация' },
+    { id:16, day:45, icon:'🏆', title:'Стратегия аттестации',
+      desc:'Главный совет: сначала КР, потом тесты — чтобы всё успеть без стресса.',
+      tags:['💡 Совет','⏱ 5 мин'], url:'task-16.html', chapter:4, chTitle:'Аттестация' },
+];
+
+const POSITIONS = ['right','left','right','left','right','left','right','left','right','left','right','left','right'];
+const BUBBLES   = [
+    'Привет! Я Ошка 👋 Вместе пройдём все приключения — первый шаг уже перед тобой!',
+    'Отличный старт! 🎉 Так держать, продолжаем!',
+    'Уже 2 приключения позади — Ошка гордится! 💪',
+    'Ты на верном пути! Следующее приключение совсем рядом ✨',
+    'Уже половина! Ошка верит в тебя 💜',
+    'Финишная прямая! Осталось совсем чуть-чуть 🏆',
+];
+
+// ── КОНФИГ ПЕРЕХОДОВ МЕЖДУ ГЛАВАМИ ──
+const CH_GATES = {
+    2: {
+        medal:'🏅', checkLabel:'Знакомство пройдено! 🎉',
+        title:'Учёба началась! 🎓',
+        sub:'Теперь погружаемся в мир занятий вместе — расписание, домашние задания и прогресс ребёнка',
+        bg:'linear-gradient(135deg,#0c4a6e 0%,#0369a1 50%,#0e7490 100%)',
+        border:'rgba(56,189,248,.35)',
+    },
+    3: {
+        medal:'🎓', checkLabel:'Учёба освоена! 🎉',
+        title:'Время зачисления! 📋',
+        sub:'Последний шаг — оформляем всё официально и становимся частью семьи школы',
+        bg:'linear-gradient(135deg,#431407 0%,#9a3412 45%,#c2410c 100%)',
+        border:'rgba(251,146,60,.4)',
+    },
+    4: {
+        medal:'🎓', checkLabel:'Зачисление оформлено! 🎉',
+        title:'Время аттестации! 📋',
+        sub:'Финальный этап — сдаём аттестацию и закрываем учебный период с отличным результатом',
+        bg:'linear-gradient(135deg,#422006 0%,#92400e 45%,#b45309 100%)',
+        border:'rgba(252,211,77,.4)',
+    },
+    default: {
+        medal:'🏅', checkLabel:'Глава пройдена! 🎉',
+        title:'Новый этап!', sub:'',
+        bg:'linear-gradient(135deg,#1e1b4b,#3730a3)', border:'rgba(165,180,252,.3)',
+    },
+};
+
+// ── ДАННЫЕ ──
+function getProfile(){ return JSON.parse(localStorage.getItem('oshka_profile')||'null'); }
+function getDone(){    return JSON.parse(localStorage.getItem('oshka_done')||'[]'); }
+function saveDone(arr){ localStorage.setItem('oshka_done', JSON.stringify(arr)); }
+
+// ── STARS ──
+(function(){
+    const c=document.getElementById('stars');
+    for(let i=0;i<55;i++){
+        const s=document.createElement('div'); s.className='star';
+        const sz=Math.random()*3+.8;
+        s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+        c.appendChild(s);
+    }
+})();
+
+// ── INIT ──
+(function init(){
+    const profile = getProfile();
+    if(!profile){
+        document.getElementById('onboard-screen').style.display='flex';
+    } else {
+        renderRoad();
+    }
+})();
+
+function saveProfile(){
+    const name  = document.getElementById('inp-name').value.trim();
+    const child = document.getElementById('inp-child').value.trim();
+    if(!name){ document.getElementById('inp-name').style.borderColor='#ef4444'; return; }
+    localStorage.setItem('oshka_profile', JSON.stringify({ name, child: child||'ребёнок' }));
+    document.getElementById('onboard-screen').style.display='none';
+    renderRoad();
+}
+
+// ── ROAD ──
+function getStatus(id){
+    const done = getDone();
+    if(done.includes(id)) return 'completed';
+    const first = TASKS.find(t=>!done.includes(t.id));
+    if(first && first.id===id) return 'active';
+    return 'locked';
+}
+
+function renderRoad(){
+    const profile = getProfile();
+    const done    = getDone();
+    const name    = profile?.name  || '';
+    const total   = TASKS.length;
+
+    document.getElementById('hdr-avatar').textContent = name[0]?.toUpperCase()||'?';
+    document.getElementById('hdr-name').textContent   = name;
+    document.getElementById('hdr-prog').textContent   = `${done.length} из ${total} приключений`;
+    document.getElementById('hdr-pbar').style.width   = `${(done.length/total)*100}%`;
+    document.getElementById('hdr-streak').textContent = `🔥 ${done.length}`;
+
+    if(done.length >= total){
+        document.getElementById('finish-banner').classList.add('show');
+    }
+
+    const list = document.getElementById('tasks-list');
+    list.innerHTML = '';
+    let prevCh = null;
+
+    TASKS.forEach((task,i)=>{
+        const status = getStatus(task.id);
+        const pos    = POSITIONS[i];
+
+        if(task.chapter !== prevCh){
+            if(prevCh !== null){
+                // ── переход между главами: медаль + портал ──
+                const cfg = CH_GATES[task.chapter] || CH_GATES.default;
+                const chDone = TASKS.filter(t=>t.chapter===prevCh).every(t=>done.includes(t.id));
+
+                const cpRow = document.createElement('div');
+                cpRow.className = 'checkpoint-row';
+                cpRow.innerHTML = `
+                  <div class="checkpoint-node">
+                    <div class="checkpoint-circle ${chDone?'':'dim'}">${chDone ? cfg.medal : '🔒'}</div>
+                    <div class="checkpoint-label ${chDone?'':'dim'}">${chDone ? cfg.checkLabel : 'Пройди все приключения'}</div>
+                  </div>`;
+                list.appendChild(cpRow);
+
+                const gate = document.createElement('div');
+                gate.className = 'chapter-gate';
+                gate.style.cssText = `background:${cfg.bg};border-color:${cfg.border};`;
+                gate.innerHTML = `
+                  <div class="gate-oshka"><img src="ошка.png" alt="Ошка"></div>
+                  <div class="gate-title">${cfg.title}</div>
+                  <div class="gate-sub">${cfg.sub}</div>`;
+                list.appendChild(gate);
+            } else {
+                const ch = document.createElement('div'); ch.className='chapter';
+                ch.innerHTML = `<span>🗺 ${task.chTitle}</span>`;
+                list.appendChild(ch);
+            }
+            prevCh = task.chapter;
+        }
+
+        if(status==='active'){
+            const bi  = Math.min(done.length, BUBBLES.length-1);
+            const div = document.createElement('div');
+            div.className=`companion ${pos==='left'?'flip':''}`;
+            div.innerHTML=`<div class="oshka-crop"><img src="ошка.png" alt="Ошка"></div>
+                           <div class="bubble">${BUBBLES[bi]}</div>`;
+            list.appendChild(div);
+        }
+
+        const row=document.createElement('div');
+        row.className=`task-row pos-${pos}`;
+        row.dataset.idx=i;
+
+        const circle = status==='completed'
+            ? '<span style="font-size:31px;color:#fff">✓</span>'
+            : status==='locked'
+            ? '<span style="font-size:24px;opacity:.35">🔒</span>'
+            : `<span style="font-size:30px">${task.icon}</span>`;
+
+        row.innerHTML=`
+          <div class="task-node ${status}" onclick="clickTask(${task.id})">
+            <div class="node-circle">${circle}</div>
+            <div class="node-label">${task.title}</div>
+            <div class="node-day">Приключение ${i+1}</div>
+          </div>`;
+        list.appendChild(row);
+    });
+
+    requestAnimationFrame(drawRoad);
+}
+
+function drawRoad(){
+    const wrap=document.getElementById('road-wrap');
+    const svg =document.getElementById('road-svg');
+    svg.innerHTML='';
+    svg.setAttribute('width', wrap.scrollWidth);
+    svg.setAttribute('height',wrap.scrollHeight);
+    svg.style.cssText=`width:${wrap.scrollWidth}px;height:${wrap.scrollHeight}px`;
+
+    const wR=wrap.getBoundingClientRect();
+    const pts=[];
+    wrap.querySelectorAll('.task-row').forEach(row=>{
+        const c=row.querySelector('.node-circle');
+        if(!c) return;
+        const r=c.getBoundingClientRect();
+        pts.push({ x:r.left-wR.left+r.width/2, y:r.top-wR.top+r.height/2,
+                   status:row.querySelector('.task-node').classList[1] });
+    });
+    if(pts.length<2) return;
+
+    const all=document.createElementNS('http://www.w3.org/2000/svg','path');
+    all.setAttribute('d',buildPath(pts)); all.setAttribute('class','road-path');
+    svg.appendChild(all);
+
+    const cut=pts.findIndex(p=>p.status==='active');
+    if(cut>0){
+        const done=document.createElementNS('http://www.w3.org/2000/svg','path');
+        done.setAttribute('d',buildPath(pts.slice(0,cut+1))); done.setAttribute('class','road-path-done');
+        svg.appendChild(done);
+    }
+}
+
+function buildPath(pts){
+    let d=`M ${pts[0].x} ${pts[0].y}`;
+    for(let i=1;i<pts.length;i++){
+        const p=pts[i-1],c=pts[i],my=(p.y+c.y)/2;
+        d+=` C ${p.x} ${my}, ${c.x} ${my}, ${c.x} ${c.y}`;
+    }
+    return d;
+}
+window.addEventListener('resize',drawRoad);
+
+// ── MODAL ──
+function clickTask(id){
+    const task  =TASKS.find(t=>t.id===id);
+    const status=getStatus(id);
+    if(status==='locked') return;
+
+    document.getElementById('m-icon').textContent  = task.icon;
+    document.getElementById('m-icon').className    = status==='completed'?'modal-icon green':'modal-icon';
+    document.getElementById('m-title').textContent = task.title;
+    const adventureNum = TASKS.findIndex(t=>t.id===id) + 1;
+    document.getElementById('m-day').textContent   = `Приключение ${adventureNum}`;
+    document.getElementById('m-desc').textContent  = task.desc;
+    document.getElementById('m-badges').innerHTML  = task.tags.map(t=>`<span class="badge">${t}</span>`).join('');
+
+    const btn=document.getElementById('m-go');
+    btn.textContent = status==='completed' ? '↩ Пройти снова' : 'Начать приключение →';
+    btn.onclick = ()=>{
+        closeModal();
+        if(task.url) window.location.href=task.url;
+    };
+    document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+// ── MEDALS ──
+const MEDALS = [
+    { id:'t1',  icon:'👋', name:'Первый шаг',          desc:'Познакомился со школой и Ошкой',             taskId:1 },
+    { id:'t2',  icon:'🖥', name:'Покоритель ЛК',       desc:'Зашёл в личный кабинет школы',               taskId:2 },
+    { id:'t3',  icon:'🎥', name:'Zoom-мастер',          desc:'Подключился к первому уроку',                taskId:3 },
+    { id:'t4',  icon:'🤝', name:'Друг куратора',        desc:'Написал первое сообщение куратору',          taskId:4 },
+    { id:'ch1', icon:'🏅', name:'Знаток школы',         desc:'Прошёл все приключения первой главы',          chapterId:1, gold:true },
+    { id:'t5',  icon:'📱', name:'Навигатор',            desc:'Изучил личный кабинет ребёнка',              taskId:5 },
+    { id:'t6',  icon:'📅', name:'Мастер расписания',    desc:'Настроил уведомления о занятиях',            taskId:6 },
+    { id:'t7',  icon:'📝', name:'ДЗ под контролем',     desc:'Разобрался как следить за домашним заданием',taskId:7 },
+    { id:'t8',  icon:'⭐', name:'Отличник',             desc:'Прошёл все шаги блока "Учёба и прогресс"',   taskId:8 },
+    { id:'ch2', icon:'🎓', name:'Учёба освоена',        desc:'Прошёл все приключения второй главы',          chapterId:2, orange:true },
+    { id:'pro', icon:'🏆', name:'Родитель-профи',       desc:'Прошёл все приключения — ты настоящий герой!', allDone:true, pro:true },
+];
+
+function isMedalEarned(medal){
+    const done = getDone();
+    if(medal.taskId)    return done.includes(medal.taskId);
+    if(medal.chapterId) return TASKS.filter(t=>t.chapter===medal.chapterId).every(t=>done.includes(t.id));
+    if(medal.allDone)   return done.length === TASKS.length;
+    return false;
+}
+
+function renderMedals(){
+    const earned = MEDALS.filter(isMedalEarned).length;
+    document.getElementById('medals-badge').textContent    = earned;
+    document.getElementById('medals-hdr-count').textContent = `${earned} из ${MEDALS.length} получено`;
+
+    const list = document.getElementById('medals-list');
+    list.innerHTML = MEDALS.map(m=>{
+        const e = isMedalEarned(m);
+        const cls = e ? ('earned' + (m.gold?' is-gold':'') + (m.orange?' is-orange':'') + (m.pro?' is-pro':'')) : '';
+        return `<div class="medal-card ${cls}">
+            <div class="medal-icon">${m.icon}</div>
+            <div class="medal-info">
+                <div class="medal-name">${m.name}</div>
+                <div class="medal-desc">${m.desc}</div>
+            </div>
+            <div class="medal-tick">${e ? '✓' : ''}</div>
+        </div>`;
+    }).join('');
+}
+
+function openMedals(){
+    renderMedals();
+    document.getElementById('medals-drawer').classList.add('open');
+    document.getElementById('medals-overlay').classList.add('open');
+}
+function closeMedals(){
+    document.getElementById('medals-drawer').classList.remove('open');
+    document.getElementById('medals-overlay').classList.remove('open');
+}
+
+// обновляем бейдж при каждом рендере
+const _origRenderRoad = renderRoad;
+renderRoad = function(){
+    _origRenderRoad();
+    const earned = MEDALS.filter(isMedalEarned).length;
+    document.getElementById('medals-badge').textContent = earned;
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задание 2 — Регистрация на платформе</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+            background:linear-gradient(160deg,#1a0840 0%,#2d1b69 50%,#1a0840 100%);
+            min-height:100vh; color:#fff;
+        }
+        .stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+        .star  { position:absolute; background:#fff; border-radius:50%;
+                 animation:twinkle var(--d,3s) infinite alternate; }
+        @keyframes twinkle { 0%{opacity:.1;transform:scale(1)} 100%{opacity:.7;transform:scale(1.4)} }
+
+        /* TOPBAR */
+        .topbar {
+            position:sticky; top:0; z-index:50;
+            background:rgba(26,8,64,.98);
+            border-bottom:1px solid rgba(255,255,255,.08);
+            padding:13px 18px; display:flex; align-items:center; gap:12px;
+        }
+        .back-btn {
+            display:flex; align-items:center; gap:6px;
+            background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+            border-radius:10px; padding:7px 13px; font-size:13px; font-weight:600;
+            cursor:pointer; color:#fff; text-decoration:none; transition:background .2s;
+        }
+        .back-btn:hover { background:rgba(255,255,255,.16); }
+        .topbar-title { font-size:15px; font-weight:700; flex:1; }
+        .task-badge {
+            background:rgba(132,204,22,.15); border:1px solid rgba(132,204,22,.35);
+            border-radius:99px; padding:5px 12px; font-size:12px;
+            color:#a3e635; font-weight:700;
+        }
+
+        /* PAGE */
+        .page { position:relative; z-index:1; max-width:620px; margin:0 auto; padding:28px 18px 110px; }
+
+        /* PROGRESS */
+        .progress-header { margin-bottom:24px; }
+        .progress-title { font-size:13px; font-weight:700; opacity:.6; margin-bottom:8px;
+                          text-transform:uppercase; letter-spacing:.5px; }
+        .progress-bar { height:8px; background:rgba(255,255,255,.1); border-radius:99px; overflow:hidden; }
+        .progress-fill { height:100%; background:linear-gradient(90deg,#84cc16,#a3e635);
+                         border-radius:99px; transition:width .5s ease; }
+        .progress-count { font-size:13px; opacity:.5; margin-top:6px; }
+
+        /* HERO */
+        .hero {
+            background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(168,85,247,.1));
+            border:1px solid rgba(124,58,237,.3); border-radius:20px;
+            padding:24px; margin-bottom:20px;
+            display:flex; align-items:center; gap:16px;
+        }
+        .hero-oshka { width:68px; height:70px; overflow:hidden; position:relative; flex-shrink:0; }
+        .hero-oshka img { position:absolute; width:172px; top:-4px; left:-3px; }
+        .hero h1 { font-size:22px; font-weight:800; line-height:1.25; margin-bottom:6px; }
+        .hero p  { font-size:13px; line-height:1.6; opacity:.8; }
+
+        /* STEPS */
+        .steps-title { font-size:13px; font-weight:700; opacity:.5; margin-bottom:14px;
+                       text-transform:uppercase; letter-spacing:.5px; }
+
+        .step {
+            background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.1);
+            border-radius:18px; margin-bottom:12px; overflow:hidden;
+            transition:border-color .3s, background .3s;
+            cursor:pointer;
+        }
+        .step.done {
+            background:rgba(132,204,22,.08); border-color:rgba(132,204,22,.35);
+        }
+        .step-head {
+            display:flex; align-items:center; gap:14px; padding:18px 20px;
+        }
+        .step-num {
+            width:38px; height:38px; border-radius:50%; flex-shrink:0;
+            background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.2);
+            display:flex; align-items:center; justify-content:center;
+            font-size:15px; font-weight:800; transition:all .3s;
+        }
+        .step.done .step-num {
+            background:linear-gradient(135deg,#84cc16,#65a30d);
+            border-color:transparent; font-size:18px;
+        }
+        .step-info { flex:1; }
+        .step-title { font-size:15px; font-weight:700; margin-bottom:3px; }
+        .step.done .step-title { color:#a3e635; }
+        .step-sub   { font-size:12px; opacity:.55; }
+        .step-arrow { font-size:16px; opacity:.3; transition:opacity .2s; }
+        .step:not(.done):hover .step-arrow { opacity:.7; }
+
+        /* STEP BODY (expandable) */
+        .step-body {
+            display:none; padding:0 20px 20px; border-top:1px solid rgba(255,255,255,.07);
+        }
+        .step.open .step-body { display:block; }
+        .step-body p { font-size:14px; line-height:1.7; opacity:.82; margin-bottom:12px; }
+
+        .tip {
+            background:rgba(124,58,237,.15); border:1px solid rgba(124,58,237,.3);
+            border-radius:12px; padding:12px 15px; font-size:13px; line-height:1.6;
+            margin-bottom:12px;
+        }
+        .tip b { color:#c4b5fd; }
+
+        .warn {
+            background:rgba(234,179,8,.1); border:1px solid rgba(234,179,8,.3);
+            border-radius:12px; padding:12px 15px; font-size:13px; line-height:1.6;
+            margin-bottom:12px; color:#fde68a;
+        }
+
+        .link-btn {
+            display:inline-flex; align-items:center; gap:8px;
+            background:linear-gradient(135deg,#7c3aed,#9333ea);
+            border-radius:12px; padding:11px 18px; font-size:13px; font-weight:700;
+            color:#fff; text-decoration:none; margin-bottom:12px; transition:opacity .2s;
+        }
+        .link-btn:hover { opacity:.88; }
+
+        .done-step-btn {
+            display:block; width:100%; padding:13px;
+            background:linear-gradient(135deg,#84cc16,#65a30d);
+            border:none; border-radius:12px; font-size:14px; font-weight:800;
+            color:#fff; cursor:pointer; margin-top:8px; transition:opacity .2s;
+        }
+        .done-step-btn:hover { opacity:.88; }
+
+        /* OSHKA BUBBLE between steps */
+        .oshka-mid {
+            display:flex; align-items:flex-end; gap:10px;
+            margin:4px 0 12px; padding:0 4px;
+        }
+        .oshka-mid .oshka-crop { width:56px; height:58px; overflow:hidden; position:relative; flex-shrink:0; }
+        .oshka-mid .oshka-crop img { position:absolute; width:142px; top:-3px; left:-2px; }
+        .bubble {
+            background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16);
+            border-radius:14px 14px 14px 4px; padding:9px 13px;
+            font-size:12px; line-height:1.55; max-width:240px;
+        }
+
+        /* PDF DOWNLOAD */
+        .pdf-card {
+            background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+            border-radius:16px; padding:18px 20px; margin-bottom:20px;
+            display:flex; align-items:center; gap:14px;
+        }
+        .pdf-icon { font-size:32px; flex-shrink:0; }
+        .pdf-info { flex:1; }
+        .pdf-info h3 { font-size:14px; font-weight:700; margin-bottom:3px; }
+        .pdf-info p  { font-size:12px; opacity:.55; }
+        .pdf-btn {
+            background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+            border-radius:10px; padding:8px 14px; font-size:12px; font-weight:700;
+            color:#fff; text-decoration:none; flex-shrink:0; transition:background .2s;
+        }
+        .pdf-btn:hover { background:rgba(255,255,255,.18); }
+
+        /* COMPLETION */
+        .completion {
+            display:none; text-align:center;
+            background:linear-gradient(135deg,rgba(132,204,22,.15),rgba(101,163,13,.08));
+            border:1px solid rgba(132,204,22,.3); border-radius:20px;
+            padding:28px; margin-bottom:20px;
+        }
+        .completion.show { display:block; }
+        .completion .big { font-size:48px; margin-bottom:12px; }
+        .completion h2   { font-size:20px; font-weight:800; color:#a3e635; margin-bottom:8px; }
+        .completion p    { font-size:14px; opacity:.8; line-height:1.6; }
+
+        /* DONE BUTTON */
+        .done-wrap {
+            position:fixed; bottom:0; left:0; right:0; z-index:40;
+            padding:16px 18px 28px;
+            background:linear-gradient(to top,#1a0840 65%,transparent);
+        }
+        .done-btn {
+            display:block; width:100%; max-width:620px; margin:0 auto;
+            padding:17px; border:none; border-radius:15px;
+            font-size:15px; font-weight:800; cursor:pointer;
+            background:linear-gradient(135deg,#84cc16,#65a30d); color:#fff;
+            transition:opacity .2s, transform .1s;
+        }
+        .done-btn:hover  { opacity:.9; transform:translateY(-1px); }
+        .done-btn.locked { background:rgba(255,255,255,.1); color:rgba(255,255,255,.4);
+                           cursor:default; transform:none !important; }
+        .done-btn.done   { background:rgba(132,204,22,.15); border:1px solid rgba(132,204,22,.3);
+                           color:#a3e635; cursor:default; transform:none !important; }
+
+                .done-two { display:flex; gap:10px; max-width:620px; margin:0 auto; }
+        .btn-map  { padding:18px 16px; border:1px solid rgba(255,255,255,.2); border-radius:14px;
+                    font-size:14px; font-weight:700; cursor:pointer;
+                    background:rgba(255,255,255,.08); color:#fff; white-space:nowrap;
+                    flex-shrink:0; transition:background .2s; }
+        .btn-map:hover { background:rgba(255,255,255,.15); }
+        .btn-nxt  { flex:1; padding:18px; border:none; border-radius:14px;
+                    font-size:15px; font-weight:800; cursor:pointer;
+                    background:linear-gradient(135deg,#84cc16,#65a30d); color:#fff;
+                    transition:opacity .2s, transform .1s; }
+        .btn-nxt:hover  { opacity:.9; transform:translateY(-2px); }
+        .btn-nxt:active { transform:translateY(0); }
+        @keyframes fall { to { transform:translateY(110vh) rotate(540deg); opacity:0; } }
+        @keyframes pop  { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
+    </style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+
+<div class="topbar">
+    <a class="back-btn" href="index.html">← Назад</a>
+    <div class="topbar-title">Приключение 2</div>
+    <div class="task-badge">🖥 День 2</div>
+</div>
+
+<div class="page">
+
+    <!-- PROGRESS -->
+    <div class="progress-header">
+        <div class="progress-title">Прогресс приключения</div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="progress-count" id="prog-count">0 из 4 шагов</div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-oshka"><img src="ошка.png" alt="Ошка"></div>
+        <div>
+            <h1>Входим в платформу! 🖥</h1>
+            <p>Ошка поможет зайти в личный кабинет школы. Всего 4 шага — справитесь за 5 минут!</p>
+        </div>
+    </div>
+
+    <!-- PDF -->
+    <div class="pdf-card">
+        <div class="pdf-icon">📄</div>
+        <div class="pdf-info">
+            <h3>Полная инструкция</h3>
+            <p>PDF со скриншотами для всех устройств</p>
+        </div>
+        <a class="pdf-btn" href="инструкция.pdf" download>Скачать</a>
+    </div>
+
+    <div class="steps-title">Шаги приключения</div>
+
+    <!-- STEP 1 -->
+    <div class="step" id="step-1" onclick="toggleStep(1)">
+        <div class="step-head">
+            <div class="step-num" id="num-1">1</div>
+            <div class="step-info">
+                <div class="step-title">Установите Google Chrome</div>
+                <div class="step-sub">Браузер для работы на платформе</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Для работы на платформе Онлайн-школы №1 мы рекомендуем браузер <b>Google Chrome</b>. Если он уже установлен — переходите к следующему шагу!</p>
+            <a class="link-btn" href="https://www.google.com/chrome/" target="_blank">🌐 Скачать Google Chrome</a>
+            <button class="done-step-btn" onclick="doneStep(event,1)">✓ Chrome установлен!</button>
+        </div>
+    </div>
+
+    <div class="oshka-mid" id="bubble-1" style="display:none">
+        <div class="oshka-crop"><img src="ошка.png" alt="Ошка"></div>
+        <div class="bubble">Отлично! Браузер готов 🌐 Теперь найдём письмо от школы!</div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step" id="step-2" onclick="toggleStep(2)">
+        <div class="step-head">
+            <div class="step-num" id="num-2">2</div>
+            <div class="step-info">
+                <div class="step-title">Найдите письмо от школы</div>
+                <div class="step-sub">На email который вы дали при записи</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Куратор зарегистрировал ваш личный кабинет. На вашу почту пришло письмо от <b>Онлайн Школы №1</b>.</p>
+            <div class="tip"><b>Что ищем:</b> письмо с темой «Добро пожаловать в Онлайн-школу №1» с кнопкой или ссылкой для создания пароля.</div>
+            <div class="warn">⚠️ Не нашли письмо? Проверьте папку <b>Спам</b> или <b>Промоакции</b>. Если нет — напишите куратору.</div>
+            <button class="done-step-btn" onclick="doneStep(event,2)">✓ Письмо нашёл!</button>
+        </div>
+    </div>
+
+    <div class="oshka-mid" id="bubble-2" style="display:none">
+        <div class="oshka-crop"><img src="ошка.png" alt="Ошка"></div>
+        <div class="bubble">Письмо найдено! 📧 Теперь самое важное — создаём пароль!</div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step" id="step-3" onclick="toggleStep(3)">
+        <div class="step-head">
+            <div class="step-num" id="num-3">3</div>
+            <div class="step-info">
+                <div class="step-title">Создайте пароль</div>
+                <div class="step-sub">Перейдите по ссылке из письма</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Нажмите на ссылку в письме — она откроет страницу создания пароля.</p>
+            <div class="tip">
+                <b>Придумайте пароль</b> и запишите его — он понадобится при каждом входе.<br><br>
+                Если ссылка не кликается — скопируйте её и вставьте в адресную строку Chrome.
+            </div>
+            <p>После создания пароля нажмите <b>«Сохранить»</b>.</p>
+            <button class="done-step-btn" onclick="doneStep(event,3)">✓ Пароль создан!</button>
+        </div>
+    </div>
+
+    <div class="oshka-mid" id="bubble-3" style="display:none">
+        <div class="oshka-crop"><img src="ошка.png" alt="Ошка"></div>
+        <div class="bubble">Пароль готов! 🔐 Последний шаг — входим в личный кабинет!</div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step" id="step-4" onclick="toggleStep(4)">
+        <div class="step-head">
+            <div class="step-num" id="num-4">4</div>
+            <div class="step-info">
+                <div class="step-title">Войдите в личный кабинет</div>
+                <div class="step-sub">study.onlineschool-1.ru/auth</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Теперь заходите в личный кабинет в любое время!</p>
+            <div class="tip">
+                <b>Логин:</b> ваш email<br>
+                <b>Пароль:</b> тот что вы только что создали
+            </div>
+            <a class="link-btn" href="https://study.onlineschool-1.ru/auth" target="_blank">🚀 Открыть личный кабинет</a>
+            <div class="warn">💡 Сохраните ссылку в закладки браузера — будете пользоваться ею каждый день!</div>
+            <button class="done-step-btn" onclick="doneStep(event,4)">✓ Я вошёл в кабинет!</button>
+        </div>
+    </div>
+
+    <!-- COMPLETION -->
+    <div class="completion" id="completion">
+        <div class="big">🎉</div>
+        <h2>Приключение пройдено!</h2>
+        <p>Вы зарегистрированы на платформе школы. Ошка очень гордится!<br>Следующий шаг — настроим Zoom для уроков.</p>
+    </div>
+
+</div>
+
+<div class="done-wrap">
+    <button class="done-btn locked" id="done-btn" onclick="markDone()">Выполните все шаги ↑</button>
+</div>
+
+<script>
+const TASK_ID   = 2;
+const TOTAL     = 4;
+let doneSteps   = new Set(JSON.parse(localStorage.getItem('oshka_steps_2')||'[]'));
+let taskDone    = (JSON.parse(localStorage.getItem('oshka_done')||'[]')).includes(TASK_ID);
+
+// STARS
+(function(){
+    const c=document.getElementById('stars');
+    for(let i=0;i<45;i++){
+        const s=document.createElement('div'); s.className='star';
+        const sz=Math.random()*2.5+.6;
+        s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+        c.appendChild(s);
+    }
+})();
+
+// RESTORE STATE
+(function restore(){
+    doneSteps.forEach(n => applyDone(n, false));
+    updateProgress();
+    if(taskDone){
+        const btn=document.getElementById('done-btn');
+        btn.textContent='✓ Уже выполнено'; btn.classList.remove('locked'); btn.classList.add('done');
+        document.getElementById('completion').classList.add('show');
+    }
+})();
+
+function toggleStep(n){
+    const el = document.getElementById('step-'+n);
+    const isOpen = el.classList.contains('open');
+    // close all
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));
+    if(!isOpen) el.classList.add('open');
+}
+
+function doneStep(e, n){
+    e.stopPropagation();
+    if(doneSteps.has(n)) return;
+    doneSteps.add(n);
+    localStorage.setItem('oshka_steps_2', JSON.stringify([...doneSteps]));
+    applyDone(n, true);
+    updateProgress();
+    // close step
+    document.getElementById('step-'+n).classList.remove('open');
+}
+
+function applyDone(n, animate){
+    const step = document.getElementById('step-'+n);
+    const num  = document.getElementById('num-'+n);
+    step.classList.add('done');
+    num.textContent = '✓';
+    if(animate){
+        num.style.animation='pop .3s ease';
+        setTimeout(()=>num.style.animation='',300);
+    }
+    const bubble = document.getElementById('bubble-'+n);
+    if(bubble) bubble.style.display='flex';
+}
+
+function updateProgress(){
+    const count = doneSteps.size;
+    const pct   = (count/TOTAL)*100;
+    document.getElementById('prog-fill').style.width  = pct+'%';
+    document.getElementById('prog-count').textContent = `${count} из ${TOTAL} шагов`;
+
+    if(count >= TOTAL){
+        const btn=document.getElementById('done-btn');
+        btn.textContent='✓ Приключение пройдено!';
+        btn.classList.remove('locked');
+        document.getElementById('completion').classList.add('show');
+        document.getElementById('completion').scrollIntoView({behavior:'smooth', block:'center'});
+    }
+}
+
+function markDone(){
+    if(document.getElementById('done-btn').classList.contains('locked')) return;
+    if(taskDone) return;
+    taskDone = true;
+    const arr=JSON.parse(localStorage.getItem('oshka_done')||'[]');
+    if(!arr.includes(TASK_ID)){ arr.push(TASK_ID); localStorage.setItem('oshka_done',JSON.stringify(arr)); }
+    const btn=document.getElementById('done-btn');
+    btn.textContent='🎉 Отлично!'; btn.classList.add('done');
+    confetti();
+    setTimeout(()=>{
+        document.getElementById('done-wrap').innerHTML=`<div class="done-two">
+            <button class="btn-map" onclick="window.location.href='index.html'">← На карту</button>
+            <button class="btn-nxt" onclick="window.location.href='task-3.html'">Следующее приключение →</button>
+        </div>`;
+    }, 900);
+}
+
+function confetti(){
+    const colors=['#84cc16','#7c3aed','#f59e0b','#ec4899','#a3e635','#c084fc'];
+    for(let i=0;i<28;i++){
+        setTimeout(()=>{
+            const el=document.createElement('div');
+            el.style.cssText=`position:fixed;left:${10+Math.random()*80}%;top:-20px;
+                width:${8+Math.random()*8}px;height:${8+Math.random()*8}px;
+                background:${colors[Math.floor(Math.random()*colors.length)]};
+                border-radius:${Math.random()>.5?'50%':'3px'};
+                animation:fall ${1.2+Math.random()*1.8}s forwards;z-index:999;`;
+            document.body.appendChild(el);
+            setTimeout(()=>el.remove(),3500);
+        },i*70);
+    }
+}
+</script>
+</body>
+</html>

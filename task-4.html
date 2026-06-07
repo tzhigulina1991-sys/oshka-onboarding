@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Знакомство с куратором</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+            background:linear-gradient(160deg,#1a0840 0%,#2d1b69 50%,#1a0840 100%);
+            min-height:100vh; color:#fff; overflow-x:hidden;
+        }
+        .stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+        .star  { position:absolute; background:#fff; border-radius:50%;
+                 animation:twinkle var(--d,3s) infinite alternate; }
+        @keyframes twinkle {
+            0%  { opacity:.12; transform:scale(1); }
+            100%{ opacity:.8;  transform:scale(1.4); }
+        }
+
+        .topbar {
+            position:sticky; top:0; z-index:50;
+            background:rgba(26,8,64,.98);
+            border-bottom:1px solid rgba(255,255,255,.08);
+            padding:13px 18px; display:flex; align-items:center; gap:12px;
+        }
+        .btn-back {
+            background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+            border-radius:99px; padding:7px 16px; color:#fff; font-size:13px;
+            font-weight:600; cursor:pointer; text-decoration:none;
+            transition:background .2s;
+        }
+        .btn-back:hover { background:rgba(255,255,255,.14); }
+        .topbar-title { font-size:15px; font-weight:700; }
+
+        .page { position:relative; z-index:1; max-width:460px; margin:0 auto;
+                padding:32px 18px 60px; }
+
+        /* ── КУРАТОР ── */
+        .curator-wrap {
+            display:flex; flex-direction:column; align-items:center;
+            margin-bottom:28px;
+        }
+        .curator-svg { width:140px; height:170px; }
+
+        .speech-bubble {
+            position:relative; background:rgba(255,255,255,.1);
+            border:1px solid rgba(255,255,255,.18); border-radius:20px;
+            padding:16px 20px; margin-top:16px; text-align:center;
+            max-width:320px; width:100%;
+        }
+        .speech-bubble::before {
+            content:''; position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+            border:10px solid transparent; border-bottom-color:rgba(255,255,255,.18);
+            border-top:0; margin-top:0;
+        }
+        .speech-bubble::after {
+            content:''; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+            border:9px solid transparent; border-bottom-color:rgba(60,30,120,.95);
+            border-top:0;
+        }
+        .speech-hi   { font-size:18px; font-weight:800; margin-bottom:4px; }
+        .speech-name { font-size:15px; color:#a3e635; font-weight:700; }
+
+        /* ── КАРТОЧКИ ── */
+        .card {
+            background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+            border-radius:20px; padding:20px; margin-bottom:14px;
+        }
+        .card h3 { font-size:14px; font-weight:700; color:#a3e635;
+                   text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
+        .card p  { font-size:14px; line-height:1.65; opacity:.8; }
+        .card ul { padding-left:0; list-style:none; }
+        .card ul li { font-size:14px; line-height:1.65; opacity:.8;
+                      padding:4px 0; display:flex; gap:8px; }
+        .card ul li::before { content:'•'; color:#a3e635; font-weight:700; flex-shrink:0; }
+
+        .contacts { display:flex; flex-direction:column; gap:10px; }
+        .contact-item {
+            display:flex; align-items:center; gap:12px;
+            background:rgba(255,255,255,.06); border-radius:13px; padding:12px 16px;
+        }
+        .contact-icon { font-size:20px; flex-shrink:0; }
+        .contact-label { font-size:11px; opacity:.5; text-transform:uppercase;
+                         letter-spacing:.4px; font-weight:700; margin-bottom:2px; }
+        .contact-value { font-size:14px; font-weight:600; }
+
+        /* ── КНОПКА ── */
+        .btn-done {
+            width:100%; padding:18px; border:none; border-radius:16px;
+            font-size:16px; font-weight:800; cursor:pointer; margin-top:8px;
+            background:linear-gradient(135deg,#84cc16,#65a30d); color:#fff;
+            transition:opacity .2s, transform .1s;
+        }
+        .btn-done:hover  { opacity:.9; transform:translateY(-1px); }
+        .btn-done:active { transform:translateY(0); }
+
+                .done-two { display:flex; gap:10px; max-width:620px; margin:0 auto; }
+        .btn-map  { padding:18px 16px; border:1px solid rgba(255,255,255,.2); border-radius:14px;
+                    font-size:14px; font-weight:700; cursor:pointer;
+                    background:rgba(255,255,255,.08); color:#fff; white-space:nowrap;
+                    flex-shrink:0; transition:background .2s; }
+        .btn-map:hover { background:rgba(255,255,255,.15); }
+        .btn-nxt  { flex:1; padding:18px; border:none; border-radius:14px;
+                    font-size:15px; font-weight:800; cursor:pointer;
+                    background:linear-gradient(135deg,#84cc16,#65a30d); color:#fff;
+                    transition:opacity .2s, transform .1s; }
+        .btn-nxt:hover  { opacity:.9; transform:translateY(-2px); }
+        .btn-nxt:active { transform:translateY(0); }
+        @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.04)} 100%{transform:scale(1)} }
+        .btn-done.popping { animation:pop .3s ease; }
+    </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="topbar">
+    <a class="btn-back" href="index.html">← Назад</a>
+    <div class="topbar-title">Приключение 4</div>
+</div>
+
+<div class="page">
+
+    <div class="curator-wrap">
+        <!-- Мультяшный куратор — CSS/SVG, без внешних файлов -->
+        <svg class="curator-svg" viewBox="0 0 140 170" xmlns="http://www.w3.org/2000/svg">
+            <!-- Тело / рубашка -->
+            <ellipse cx="70" cy="158" rx="46" ry="28" fill="#7c3aed"/>
+            <rect x="38" y="128" width="64" height="36" rx="14" fill="#7c3aed"/>
+            <!-- Воротник -->
+            <path d="M58 128 L70 144 L82 128" fill="#9333ea"/>
+            <!-- Шея -->
+            <rect x="59" y="112" width="22" height="22" rx="8" fill="#f5c5a3"/>
+            <!-- Голова -->
+            <ellipse cx="70" cy="92" rx="38" ry="40" fill="#f5c5a3"/>
+            <!-- Волосы (нейтральная короткая стрижка) -->
+            <ellipse cx="70" cy="58" rx="38" ry="18" fill="#5c4033"/>
+            <ellipse cx="36" cy="78" rx="11" ry="22" fill="#5c4033"/>
+            <ellipse cx="104" cy="78" rx="11" ry="22" fill="#5c4033"/>
+            <rect x="36" y="56" width="68" height="16" fill="#5c4033"/>
+            <!-- Уши -->
+            <ellipse cx="32" cy="92" rx="8" ry="10" fill="#f5c5a3"/>
+            <ellipse cx="108" cy="92" rx="8" ry="10" fill="#f5c5a3"/>
+            <!-- Белки глаз -->
+            <ellipse cx="56" cy="90" rx="10" ry="11" fill="white"/>
+            <ellipse cx="84" cy="90" rx="10" ry="11" fill="white"/>
+            <!-- Радужки -->
+            <circle cx="56" cy="91" r="7" fill="#3d6bce"/>
+            <circle cx="84" cy="91" r="7" fill="#3d6bce"/>
+            <!-- Зрачки -->
+            <circle cx="57" cy="92" r="4" fill="#1a1a2e"/>
+            <circle cx="85" cy="92" r="4" fill="#1a1a2e"/>
+            <!-- Блики в глазах -->
+            <circle cx="59" cy="89" r="2" fill="white"/>
+            <circle cx="87" cy="89" r="2" fill="white"/>
+            <!-- Нос -->
+            <ellipse cx="70" cy="103" rx="4" ry="3" fill="#e8a882"/>
+            <!-- Улыбка -->
+            <path d="M 58 112 Q 70 122 82 112" stroke="#c87941" stroke-width="2.5"
+                  fill="none" stroke-linecap="round"/>
+            <!-- Румянец -->
+            <ellipse cx="42" cy="102" rx="9" ry="5" fill="#f9a8a8" opacity="0.45"/>
+            <ellipse cx="98" cy="102" rx="9" ry="5" fill="#f9a8a8" opacity="0.45"/>
+            <!-- Брови (нейтральные, дугой) -->
+            <path d="M 47 78 Q 56 73 65 78" stroke="#5c4033" stroke-width="2.5"
+                  fill="none" stroke-linecap="round"/>
+            <path d="M 75 78 Q 84 73 93 78" stroke="#5c4033" stroke-width="2.5"
+                  fill="none" stroke-linecap="round"/>
+        </svg>
+
+        <div class="speech-bubble">
+            <div class="speech-hi">Привет! Я твой куратор! 👋</div>
+            <div class="speech-name">Меня зовут Иванова Анна</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <p>Я рада приветствовать вас в нашей школе! Я буду рядом на протяжении всего обучения вашего ребёнка — помогу освоиться, отвечу на вопросы и поддержу в любой ситуации.</p>
+    </div>
+
+    <div class="card">
+        <h3>По каким вопросам ко мне обращаться</h3>
+        <ul>
+            <li>К куратору можно обратиться по любым возникшим вопросам — большим и маленьким, мы всегда рядом.</li>
+            <li>Если возникают сложности с подключением на уроки или не получается загрузить домашнее задание — пишите обязательно, разберёмся вместе!</li>
+            <li>Поделитесь с куратором всем, о чём стоит знать про ученика — это поможет сделать процесс обучения максимально комфортным.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Связаться со мной</h3>
+        <div class="contacts">
+            <div class="contact-item">
+                <div class="contact-icon">📞</div>
+                <div>
+                    <div class="contact-label">Телефон / WhatsApp</div>
+                    <div class="contact-value">+7 (999) 123-45-67</div>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon">✉️</div>
+                <div>
+                    <div class="contact-label">Электронная почта</div>
+                    <div class="contact-value">anna.ivanova@romashka-school.ru</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-done" id="btn-done" onclick="markDone()">
+        Познакомились! Дальше →
+    </button>
+
+</div>
+
+<script>
+(function(){
+    const c=document.getElementById('stars');
+    for(let i=0;i<55;i++){
+        const s=document.createElement('div'); s.className='star';
+        const sz=Math.random()*3+.8;
+        s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+        c.appendChild(s);
+    }
+})();
+
+function markDone(){
+    const done = JSON.parse(localStorage.getItem('oshka_done')||'[]');
+    if(!done.includes(4)) done.push(4);
+    localStorage.setItem('oshka_done', JSON.stringify(done));
+    const btn = document.getElementById('btn-done');
+    btn.textContent = '🎉 Готово!';
+    btn.classList.add('popping');
+    setTimeout(()=>{
+        const w=document.createElement('div'); w.className='done-two'; w.style.marginTop='8px';
+        w.innerHTML=`<button class="btn-map" onclick="window.location.href='index.html'">← На карту</button><button class="btn-nxt" onclick="window.location.href='task-5.html'">Следующее приключение →</button>`;
+        btn.replaceWith(w);
+    }, 700);
+}
+</script>
+</body>
+</html>

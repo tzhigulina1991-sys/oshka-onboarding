@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задание 3 — Устанавливаем Zoom</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+            background:linear-gradient(160deg,#1a0840 0%,#2d1b69 50%,#1a0840 100%);
+            min-height:100vh; color:#fff;
+        }
+        .stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+        .star  { position:absolute; background:#fff; border-radius:50%;
+                 animation:twinkle var(--d,3s) infinite alternate; }
+        @keyframes twinkle { 0%{opacity:.1;transform:scale(1)} 100%{opacity:.7;transform:scale(1.4)} }
+
+        .topbar {
+            position:sticky; top:0; z-index:50;
+            background:rgba(26,8,64,.98);
+            border-bottom:1px solid rgba(255,255,255,.08);
+            padding:13px 18px; display:flex; align-items:center; gap:12px;
+        }
+        .back-btn {
+            display:flex; align-items:center; gap:6px;
+            background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+            border-radius:10px; padding:7px 13px; font-size:13px; font-weight:600;
+            cursor:pointer; color:#fff; text-decoration:none; transition:background .2s;
+        }
+        .back-btn:hover { background:rgba(255,255,255,.16); }
+        .topbar-title { font-size:15px; font-weight:700; flex:1; }
+        .task-badge {
+            background:rgba(99,179,237,.15); border:1px solid rgba(99,179,237,.35);
+            border-radius:99px; padding:5px 12px; font-size:12px;
+            color:#90cdf4; font-weight:700;
+        }
+
+        .page { position:relative; z-index:1; max-width:620px; margin:0 auto; padding:28px 18px 110px; }
+
+        .progress-header { margin-bottom:24px; }
+        .progress-title  { font-size:13px; font-weight:700; opacity:.6; margin-bottom:8px;
+                           text-transform:uppercase; letter-spacing:.5px; }
+        .progress-bar    { height:8px; background:rgba(255,255,255,.1); border-radius:99px; overflow:hidden; }
+        .progress-fill   { height:100%; background:linear-gradient(90deg,#3b82f6,#60a5fa);
+                           border-radius:99px; transition:width .5s ease; }
+        .progress-count  { font-size:13px; opacity:.5; margin-top:6px; }
+
+        /* HERO */
+        .hero {
+            background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(37,99,235,.1));
+            border:1px solid rgba(59,130,246,.3); border-radius:20px;
+            padding:24px; margin-bottom:20px;
+            display:flex; align-items:center; gap:16px;
+        }
+        .hero-oshka { width:68px; height:70px; overflow:hidden; position:relative; flex-shrink:0; }
+        .hero-oshka img { position:absolute; width:172px; top:-4px; left:-3px; }
+        .hero h1 { font-size:22px; font-weight:800; line-height:1.25; margin-bottom:6px; }
+        .hero p  { font-size:13px; line-height:1.6; opacity:.8; }
+
+        /* DEVICE SELECTOR */
+        .device-selector { margin-bottom:20px; }
+        .device-title { font-size:13px; font-weight:700; opacity:.6; margin-bottom:10px;
+                        text-transform:uppercase; letter-spacing:.5px; }
+        .devices { display:flex; gap:8px; flex-wrap:wrap; }
+        .device-btn {
+            padding:9px 16px; border-radius:10px; font-size:13px; font-weight:700;
+            cursor:pointer; border:1.5px solid rgba(255,255,255,.15);
+            background:rgba(255,255,255,.07); color:#fff; transition:all .15s;
+        }
+        .device-btn:hover  { background:rgba(255,255,255,.12); }
+        .device-btn.active { background:rgba(59,130,246,.25); border-color:#3b82f6; color:#90cdf4; }
+
+        /* STEPS */
+        .steps-title { font-size:13px; font-weight:700; opacity:.5; margin-bottom:14px;
+                       text-transform:uppercase; letter-spacing:.5px; }
+        .step {
+            background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.1);
+            border-radius:18px; margin-bottom:12px; overflow:hidden;
+            transition:border-color .3s, background .3s; cursor:pointer;
+        }
+        .step.done { background:rgba(59,130,246,.08); border-color:rgba(59,130,246,.35); }
+        .step-head { display:flex; align-items:center; gap:14px; padding:18px 20px; }
+        .step-num {
+            width:38px; height:38px; border-radius:50%; flex-shrink:0;
+            background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.2);
+            display:flex; align-items:center; justify-content:center;
+            font-size:15px; font-weight:800; transition:all .3s;
+        }
+        .step.done .step-num { background:linear-gradient(135deg,#3b82f6,#2563eb); border-color:transparent; font-size:18px; }
+        .step-info { flex:1; }
+        .step-title { font-size:15px; font-weight:700; margin-bottom:3px; }
+        .step.done .step-title { color:#90cdf4; }
+        .step-sub   { font-size:12px; opacity:.55; }
+        .step-arrow { font-size:16px; opacity:.3; }
+        .step-body  { display:none; padding:0 20px 20px; border-top:1px solid rgba(255,255,255,.07); }
+        .step.open .step-body { display:block; }
+        .step-body p { font-size:14px; line-height:1.7; opacity:.82; margin-bottom:12px; }
+
+        .tip {
+            background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.25);
+            border-radius:12px; padding:12px 15px; font-size:13px; line-height:1.6; margin-bottom:12px;
+        }
+        .tip b { color:#90cdf4; }
+        .warn {
+            background:rgba(234,179,8,.1); border:1px solid rgba(234,179,8,.3);
+            border-radius:12px; padding:12px 15px; font-size:13px; line-height:1.6;
+            margin-bottom:12px; color:#fde68a;
+        }
+        .important {
+            background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3);
+            border-radius:12px; padding:12px 15px; font-size:13px; line-height:1.6;
+            margin-bottom:12px; color:#fca5a5;
+        }
+
+        /* DOWNLOAD GRID */
+        .download-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+        .dl-btn {
+            display:flex; align-items:center; gap:8px; padding:11px 14px;
+            background:rgba(59,130,246,.15); border:1px solid rgba(59,130,246,.3);
+            border-radius:12px; text-decoration:none; color:#90cdf4;
+            font-size:13px; font-weight:700; transition:background .2s;
+        }
+        .dl-btn:hover { background:rgba(59,130,246,.25); }
+        .dl-btn .os-icon { font-size:20px; }
+
+        .link-btn {
+            display:inline-flex; align-items:center; gap:8px;
+            background:linear-gradient(135deg,#3b82f6,#2563eb);
+            border-radius:12px; padding:11px 18px; font-size:13px; font-weight:700;
+            color:#fff; text-decoration:none; margin-bottom:12px; transition:opacity .2s;
+        }
+        .link-btn:hover { opacity:.88; }
+
+        .done-step-btn {
+            display:block; width:100%; padding:13px;
+            background:linear-gradient(135deg,#3b82f6,#2563eb);
+            border:none; border-radius:12px; font-size:14px; font-weight:800;
+            color:#fff; cursor:pointer; margin-top:8px; transition:opacity .2s;
+        }
+        .done-step-btn:hover { opacity:.88; }
+
+        /* SCENARIO TABS */
+        .scenario-tabs { display:flex; gap:8px; margin-bottom:14px; }
+        .scenario-tab {
+            flex:1; padding:10px; border-radius:10px; font-size:12px; font-weight:700;
+            cursor:pointer; border:1.5px solid rgba(255,255,255,.15);
+            background:rgba(255,255,255,.07); color:#fff; text-align:center; transition:all .15s;
+        }
+        .scenario-tab.active { background:rgba(59,130,246,.2); border-color:#3b82f6; color:#90cdf4; }
+        .scenario-content { display:none; }
+        .scenario-content.show { display:block; }
+
+        /* OSHKA BUBBLE */
+        .oshka-mid { display:flex; align-items:flex-end; gap:10px; margin:4px 0 12px; padding:0 4px; }
+        .oshka-mid .oshka-crop { width:56px; height:58px; overflow:hidden; position:relative; flex-shrink:0; }
+        .oshka-mid .oshka-crop img { position:absolute; width:142px; top:-3px; left:-2px; }
+        .bubble {
+            background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16);
+            border-radius:14px 14px 14px 4px; padding:9px 13px;
+            font-size:12px; line-height:1.55; max-width:240px;
+        }
+
+        /* COMPLETION */
+        .completion {
+            display:none; text-align:center;
+            background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(37,99,235,.08));
+            border:1px solid rgba(59,130,246,.3); border-radius:20px;
+            padding:28px; margin-bottom:20px;
+        }
+        .completion.show { display:block; }
+        .completion .big { font-size:48px; margin-bottom:12px; }
+        .completion h2   { font-size:20px; font-weight:800; color:#90cdf4; margin-bottom:8px; }
+        .completion p    { font-size:14px; opacity:.8; line-height:1.6; }
+
+        /* DONE BUTTON */
+        .done-wrap {
+            position:fixed; bottom:0; left:0; right:0; z-index:40;
+            padding:16px 18px 28px;
+            background:linear-gradient(to top,#1a0840 65%,transparent);
+        }
+        .done-btn {
+            display:block; width:100%; max-width:620px; margin:0 auto;
+            padding:17px; border:none; border-radius:15px;
+            font-size:15px; font-weight:800; cursor:pointer;
+            background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff;
+            transition:opacity .2s, transform .1s;
+        }
+        .done-btn:hover  { opacity:.9; transform:translateY(-1px); }
+        .done-btn.locked { background:rgba(255,255,255,.1); color:rgba(255,255,255,.4);
+                           cursor:default; transform:none !important; }
+        .done-btn.done   { background:rgba(59,130,246,.15); border:1px solid rgba(59,130,246,.3);
+                           color:#90cdf4; cursor:default; transform:none !important; }
+
+                .done-two { display:flex; gap:10px; max-width:620px; margin:0 auto; }
+        .btn-map  { padding:18px 16px; border:1px solid rgba(255,255,255,.2); border-radius:14px;
+                    font-size:14px; font-weight:700; cursor:pointer;
+                    background:rgba(255,255,255,.08); color:#fff; white-space:nowrap;
+                    flex-shrink:0; transition:background .2s; }
+        .btn-map:hover { background:rgba(255,255,255,.15); }
+        .btn-nxt  { flex:1; padding:18px; border:none; border-radius:14px;
+                    font-size:15px; font-weight:800; cursor:pointer;
+                    background:linear-gradient(135deg,#84cc16,#65a30d); color:#fff;
+                    transition:opacity .2s, transform .1s; }
+        .btn-nxt:hover  { opacity:.9; transform:translateY(-2px); }
+        .btn-nxt:active { transform:translateY(0); }
+        @keyframes fall { to { transform:translateY(110vh) rotate(540deg); opacity:0; } }
+        @keyframes pop  { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
+    </style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+
+<div class="topbar">
+    <a class="back-btn" href="index.html">← Назад</a>
+    <div class="topbar-title">Приключение 3</div>
+    <div class="task-badge">🎥 День 3</div>
+</div>
+
+<div class="page">
+
+    <div class="progress-header">
+        <div class="progress-title">Прогресс приключения</div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="progress-count" id="prog-count">0 из 4 шагов</div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-oshka"><img src="ошка.png" alt="Ошка"></div>
+        <div>
+            <h1>Покоряем Zoom! 🎥</h1>
+            <p>Zoom — это где проходят все занятия. Ошка покажет как его установить и войти. 4 шага!</p>
+        </div>
+    </div>
+
+    <!-- DEVICE SELECTOR -->
+    <div class="device-selector">
+        <div class="device-title">Ваше устройство</div>
+        <div class="devices">
+            <button class="device-btn active" onclick="setDevice('win')">💻 Windows</button>
+            <button class="device-btn" onclick="setDevice('mac')">🍎 Mac</button>
+            <button class="device-btn" onclick="setDevice('android')">🤖 Android</button>
+            <button class="device-btn" onclick="setDevice('ios')">📱 iPhone/iPad</button>
+        </div>
+    </div>
+
+    <div class="steps-title">Шаги приключения</div>
+
+    <!-- STEP 1: СКАЧАТЬ ZOOM -->
+    <div class="step" id="step-1" onclick="toggleStep(1)">
+        <div class="step-head">
+            <div class="step-num" id="num-1">1</div>
+            <div class="step-info">
+                <div class="step-title">Установите Zoom</div>
+                <div class="step-sub" id="sub-1">Скачайте приложение для вашего устройства</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Выберите ссылку для скачивания под ваше устройство:</p>
+            <div class="download-grid">
+                <a class="dl-btn" href="https://zoom.us/client/latest/ZoomInstaller.exe" target="_blank">
+                    <span class="os-icon">🪟</span> Windows
+                </a>
+                <a class="dl-btn" href="https://zoom.us/client/latest/Zoom.pkg" target="_blank">
+                    <span class="os-icon">🍎</span> MacOS
+                </a>
+                <a class="dl-btn" href="https://play.google.com/store/apps/details?id=us.zoom.videomeetings" target="_blank">
+                    <span class="os-icon">🤖</span> Android
+                </a>
+                <a class="dl-btn" href="https://apps.apple.com/app/zoom-one-platform-to-connect/id546505307" target="_blank">
+                    <span class="os-icon">📱</span> iOS
+                </a>
+            </div>
+            <div class="tip">Если Zoom уже установлен — просто нажмите кнопку ниже!</div>
+            <button class="done-step-btn" onclick="doneStep(event,1)">✓ Zoom установлен!</button>
+        </div>
+    </div>
+
+    <div class="oshka-mid" id="bubble-1" style="display:none">
+        <div class="oshka-crop"><img src="ошка.png" alt="Ошка"></div>
+        <div class="bubble">Zoom установлен! 💪 Теперь примем приглашение от куратора!</div>
+    </div>
+
+    <!-- STEP 2: ПРИГЛАШЕНИЕ -->
+    <div class="step" id="step-2" onclick="toggleStep(2)">
+        <div class="step-head">
+            <div class="step-num" id="num-2">2</div>
+            <div class="step-info">
+                <div class="step-title">Примите приглашение от куратора</div>
+                <div class="step-sub">Письмо пришло на вашу почту</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Куратор отправил на вашу почту приглашение присоединиться к Zoom-пространству Онлайн Школы №1.</p>
+
+            <div class="scenario-tabs">
+                <button class="scenario-tab active" onclick="setScenario('a')">У меня есть Zoom аккаунт</button>
+                <button class="scenario-tab" onclick="setScenario('b')">Нет Zoom аккаунта</button>
+            </div>
+
+            <div class="scenario-content show" id="scenario-a">
+                <div class="tip"><b>Сценарий А:</b> Нажмите <b>«Утвердить запрос»</b> в письме. Ваш аккаунт временно перейдёт под управление школы — это нужно для безопасности уроков.</div>
+            </div>
+            <div class="scenario-content" id="scenario-b">
+                <div class="tip"><b>Сценарий Б:</b> Перейдите по ссылке из письма → пройдите быструю регистрацию.<br><br>
+                <b>Важно:</b> введите настоящие имя и фамилию ученика, придумайте и запишите пароль.</div>
+            </div>
+
+            <button class="done-step-btn" onclick="doneStep(event,2)">✓ Приглашение принято!</button>
+        </div>
+    </div>
+
+    <div class="oshka-mid" id="bubble-2" style="display:none">
+        <div class="oshka-crop"><img src="ошка.png" alt="Ошка"></div>
+        <div class="bubble">Отлично! 🎊 Входим в Zoom — почти готово!</div>
+    </div>
+
+    <!-- STEP 3: ВОЙТИ В ZOOM -->
+    <div class="step" id="step-3" onclick="toggleStep(3)">
+        <div class="step-head">
+            <div class="step-num" id="num-3">3</div>
+            <div class="step-info">
+                <div class="step-title">Войдите в приложение Zoom</div>
+                <div class="step-sub">Логин — ваш email, пароль — от Zoom</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Запустите приложение Zoom → нажмите <b>«Вход»</b>.</p>
+            <div class="tip">
+                <b>Логин:</b> email, который используется для входа в личный кабинет школы<br>
+                <b>Пароль:</b> ваш пароль от Zoom аккаунта<br><br>
+                Поставьте галочку <b>«Не выполнять выход»</b> — тогда не придётся входить каждый раз.
+            </div>
+            <button class="done-step-btn" onclick="doneStep(event,3)">✓ Вошёл в Zoom!</button>
+        </div>
+    </div>
+
+    <div class="oshka-mid" id="bubble-3" style="display:none">
+        <div class="oshka-crop"><img src="ошка.png" alt="Ошка"></div>
+        <div class="bubble">В Zoom вошли! 🚀 Последний шаг — подключаемся к уроку!</div>
+    </div>
+
+    <!-- STEP 4: ПОДКЛЮЧИТЬСЯ К УРОКУ -->
+    <div class="step" id="step-4" onclick="toggleStep(4)">
+        <div class="step-head">
+            <div class="step-num" id="num-4">4</div>
+            <div class="step-info">
+                <div class="step-title">Подключитесь к уроку</div>
+                <div class="step-sub">Через расписание в личном кабинете</div>
+            </div>
+            <div class="step-arrow">›</div>
+        </div>
+        <div class="step-body">
+            <p>Занятия запускаются прямо из личного кабинета школы:</p>
+            <div class="tip">
+                1. Откройте личный кабинет → вкладка <b>«Расписание»</b><br>
+                2. Найдите нужный урок → кликните → нажмите <b>«Войти»</b><br>
+                3. Браузер предложит открыть Zoom → поставьте галочку <b>«Always allow»</b> → нажмите <b>«Open Zoom Meetings»</b>
+            </div>
+            <div class="important">🚫 <b>Не нажимайте</b> «Запустить конференцию» на странице переадресации!</div>
+            <div class="warn">
+                💡 На уроке выберите <b>«Войти с использованием звука компьютера»</b> и поставьте галочку «Автоматически присоединяться к аудио».
+            </div>
+            <a class="link-btn" href="https://study.onlineschool-1.ru/auth" target="_blank">📅 Открыть расписание</a>
+            <button class="done-step-btn" onclick="doneStep(event,4)">✓ Всё проверил!</button>
+        </div>
+    </div>
+
+    <!-- COMPLETION -->
+    <div class="completion" id="completion">
+        <div class="big">🏆</div>
+        <h2>Zoom покорён!</h2>
+        <p>Теперь вы готовы к онлайн-урокам. Ошка аплодирует стоя! 👏<br>Вы великолепно справились с техническими испытаниями!</p>
+    </div>
+
+</div>
+
+<div class="done-wrap">
+    <button class="done-btn locked" id="done-btn" onclick="markDone()">Выполните все шаги ↑</button>
+</div>
+
+<script>
+const TASK_ID  = 3;
+const TOTAL    = 4;
+let doneSteps  = new Set(JSON.parse(localStorage.getItem('oshka_steps_3')||'[]'));
+let taskDone   = (JSON.parse(localStorage.getItem('oshka_done')||'[]')).includes(TASK_ID);
+
+(function(){
+    const c=document.getElementById('stars');
+    for(let i=0;i<45;i++){
+        const s=document.createElement('div'); s.className='star';
+        const sz=Math.random()*2.5+.6;
+        s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+        c.appendChild(s);
+    }
+})();
+
+(function restore(){
+    doneSteps.forEach(n=>applyDone(n,false));
+    updateProgress();
+    if(taskDone){
+        const btn=document.getElementById('done-btn');
+        btn.textContent='✓ Уже выполнено'; btn.classList.remove('locked'); btn.classList.add('done');
+        document.getElementById('completion').classList.add('show');
+    }
+})();
+
+function setDevice(d){
+    document.querySelectorAll('.device-btn').forEach(b=>b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
+
+function setScenario(s){
+    document.querySelectorAll('.scenario-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.scenario-content').forEach(c=>c.classList.remove('show'));
+    event.currentTarget.classList.add('active');
+    document.getElementById('scenario-'+s).classList.add('show');
+}
+
+function toggleStep(n){
+    const el=document.getElementById('step-'+n);
+    const isOpen=el.classList.contains('open');
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));
+    if(!isOpen) el.classList.add('open');
+}
+
+function doneStep(e,n){
+    e.stopPropagation();
+    if(doneSteps.has(n)) return;
+    doneSteps.add(n);
+    localStorage.setItem('oshka_steps_3',JSON.stringify([...doneSteps]));
+    applyDone(n,true);
+    updateProgress();
+    document.getElementById('step-'+n).classList.remove('open');
+}
+
+function applyDone(n,animate){
+    const step=document.getElementById('step-'+n);
+    const num =document.getElementById('num-'+n);
+    step.classList.add('done'); num.textContent='✓';
+    if(animate){ num.style.animation='pop .3s ease'; setTimeout(()=>num.style.animation='',300); }
+    const bubble=document.getElementById('bubble-'+n);
+    if(bubble) bubble.style.display='flex';
+}
+
+function updateProgress(){
+    const count=doneSteps.size;
+    document.getElementById('prog-fill').style.width=(count/TOTAL)*100+'%';
+    document.getElementById('prog-count').textContent=`${count} из ${TOTAL} шагов`;
+    if(count>=TOTAL){
+        const btn=document.getElementById('done-btn');
+        btn.textContent='✓ Приключение пройдено!'; btn.classList.remove('locked');
+        document.getElementById('completion').classList.add('show');
+        document.getElementById('completion').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+}
+
+function markDone(){
+    if(document.getElementById('done-btn').classList.contains('locked')) return;
+    if(taskDone) return;
+    taskDone=true;
+    const arr=JSON.parse(localStorage.getItem('oshka_done')||'[]');
+    if(!arr.includes(TASK_ID)){ arr.push(TASK_ID); localStorage.setItem('oshka_done',JSON.stringify(arr)); }
+    const btn=document.getElementById('done-btn');
+    btn.textContent='🎉 Отлично!'; btn.classList.add('done');
+    confetti();
+    setTimeout(()=>{
+        document.getElementById('done-wrap').innerHTML=`<div class="done-two">
+            <button class="btn-map" onclick="window.location.href='index.html'">← На карту</button>
+            <button class="btn-nxt" onclick="window.location.href='task-4.html'">Следующее приключение →</button>
+        </div>`;
+    }, 900);
+}
+
+function confetti(){
+    const colors=['#3b82f6','#7c3aed','#f59e0b','#ec4899','#60a5fa','#c084fc'];
+    for(let i=0;i<28;i++){
+        setTimeout(()=>{
+            const el=document.createElement('div');
+            el.style.cssText=`position:fixed;left:${10+Math.random()*80}%;top:-20px;
+                width:${8+Math.random()*8}px;height:${8+Math.random()*8}px;
+                background:${colors[Math.floor(Math.random()*colors.length)]};
+                border-radius:${Math.random()>.5?'50%':'3px'};
+                animation:fall ${1.2+Math.random()*1.8}s forwards;z-index:999;`;
+            document.body.appendChild(el);
+            setTimeout(()=>el.remove(),3500);
+        },i*70);
+    }
+}
+</script>
+</body>
+</html>
