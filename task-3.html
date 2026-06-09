@@ -132,6 +132,25 @@
         }
         .link-btn:hover { opacity:.88; }
 
+        /* VIDEO (опциональная инструкция) */
+        .video-btn {
+            display:inline-flex; align-items:center; gap:8px; width:100%;
+            justify-content:center; padding:11px 16px; margin-bottom:12px;
+            background:rgba(167,139,250,.12); border:1.5px solid rgba(167,139,250,.4);
+            border-radius:12px; font-size:13px; font-weight:700; color:#c4b5fd;
+            cursor:pointer; transition:background .2s;
+        }
+        .video-btn:hover { background:rgba(167,139,250,.22); }
+        .video-btn .varrow { margin-left:auto; transition:transform .2s; font-size:11px; }
+        .video-btn.open .varrow { transform:rotate(180deg); }
+        .video-frame { display:none; margin-bottom:12px; }
+        .video-frame.show { display:block; }
+        .video-frame .ratio {
+            position:relative; width:100%; aspect-ratio:16/9;
+            border-radius:12px; overflow:hidden; background:#000;
+        }
+        .video-frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
         .done-step-btn {
             display:block; width:100%; padding:13px;
             background:linear-gradient(135deg,#3b82f6,#2563eb);
@@ -303,10 +322,14 @@
 
             <div class="scenario-content show" id="scenario-a">
                 <div class="tip"><b>Сценарий А:</b> Нажмите <b>«Утвердить запрос»</b> в письме. Ваш аккаунт временно перейдёт под управление школы — это нужно для безопасности уроков.</div>
+                <button class="video-btn" onclick="toggleVideo(event,'vid-existing')">▶ Видео: подключение готового Zoom аккаунта <span class="varrow">▼</span></button>
+                <div class="video-frame" id="vid-existing" data-src="https://vk.com/video_ext.php?oid=871617307&amp;id=456239135&amp;hash=34e1f991ab69a9c4"></div>
             </div>
             <div class="scenario-content" id="scenario-b">
                 <div class="tip"><b>Сценарий Б:</b> Перейдите по ссылке из письма → пройдите быструю регистрацию.<br><br>
                 <b>Важно:</b> введите настоящие имя и фамилию ученика, придумайте и запишите пароль.</div>
+                <button class="video-btn" onclick="toggleVideo(event,'vid-create')">▶ Видео: создание Zoom аккаунта с нуля <span class="varrow">▼</span></button>
+                <div class="video-frame" id="vid-create" data-src="https://vk.com/video_ext.php?oid=871617307&amp;id=456239130&amp;hash=f24a2e3e18de23e1"></div>
             </div>
 
             <button class="done-step-btn" onclick="doneStep(event,2)">✓ Приглашение принято!</button>
@@ -335,6 +358,10 @@
                 <b>Пароль:</b> ваш пароль от Zoom аккаунта<br><br>
                 Поставьте галочку <b>«Не выполнять выход»</b> — тогда не придётся входить каждый раз.
             </div>
+            <button class="video-btn" onclick="toggleVideo(event,'vid-logout')">▶ Видео: как выйти из личного аккаунта Zoom <span class="varrow">▼</span></button>
+            <div class="video-frame" id="vid-logout" data-src="https://vk.com/video_ext.php?oid=871617307&amp;id=456239070&amp;hash=477117c130f91d96"></div>
+            <button class="video-btn" onclick="toggleVideo(event,'vid-devices')">▶ Видео: как проверить видео, звук и микрофон <span class="varrow">▼</span></button>
+            <div class="video-frame" id="vid-devices" data-src="https://vk.com/video_ext.php?oid=871617307&amp;id=456239080&amp;hash=db977290166eb479"></div>
             <button class="done-step-btn" onclick="doneStep(event,3)">✓ Вошёл в Zoom!</button>
         </div>
     </div>
@@ -366,6 +393,10 @@
                 💡 На уроке выберите <b>«Войти с использованием звука компьютера»</b> и поставьте галочку «Автоматически присоединяться к аудио».
             </div>
             <a class="link-btn" href="https://onlineschool-1.ru/study/schedule" target="_blank">📅 Открыть расписание</a>
+            <button class="video-btn" onclick="toggleVideo(event,'vid-lesson-win')">▶ Видео: подключение к уроку — Windows <span class="varrow">▼</span></button>
+            <div class="video-frame" id="vid-lesson-win" data-src="https://vk.com/video_ext.php?oid=871617307&amp;id=456239134&amp;hash=c6a3a9d81e7091fc"></div>
+            <button class="video-btn" onclick="toggleVideo(event,'vid-lesson-mac')">▶ Видео: подключение к уроку — MacOS <span class="varrow">▼</span></button>
+            <div class="video-frame" id="vid-lesson-mac" data-src="https://vk.com/video_ext.php?oid=871617307&amp;id=456239136&amp;hash=cdd8fa84b5b270c5"></div>
             <button class="done-step-btn" onclick="doneStep(event,4)">✓ Всё проверил!</button>
         </div>
     </div>
@@ -415,10 +446,24 @@ function setDevice(d){
 }
 
 function setScenario(s){
+    event.stopPropagation();
     document.querySelectorAll('.scenario-tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.scenario-content').forEach(c=>c.classList.remove('show'));
     event.currentTarget.classList.add('active');
     document.getElementById('scenario-'+s).classList.add('show');
+}
+
+function toggleVideo(e,id){
+    e.stopPropagation();
+    const btn=e.currentTarget;
+    const frame=document.getElementById(id);
+    const open=frame.classList.toggle('show');
+    btn.classList.toggle('open',open);
+    if(open && !frame.dataset.loaded){
+        frame.innerHTML='<div class="ratio"><iframe src="'+frame.dataset.src+
+            '" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
+        frame.dataset.loaded='1';
+    }
 }
 
 function toggleStep(n){
